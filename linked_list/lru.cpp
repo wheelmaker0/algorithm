@@ -1,6 +1,7 @@
 #include <iostream>
 #include <list>
 #include <unordered_map>
+#include "linked_list.h"
 
 template<typename T>
 class LruCache{
@@ -24,15 +25,28 @@ public:
         T data;
     };
 
+    void show(){
+        for(auto &x : list_){
+            std::cout << x.id << "-" << x.data << " ";
+        }
+        std::cout << "# ";
+        for(auto x = list_.end(); x != list_.begin();){
+            --x;
+            std::cout << x->id << "-" << x->data << " ";
+        }
+        std::cout << "\n";
+    }
 
     void set(int64_t id, const T &data){
+        std::cout << "set: " << id << "-" << data << ": ";
+        show();
         auto ts = now();
         expire(ts);
         list_.emplace_front(id, ts, data);
         auto ret = m_.insert({id, list_.begin()});
         if(ret.second){ // new key
             if(list_.size() > capacity_){
-                m_.erase(list_.rbegin()->id);
+                m_.erase(list_.back().id);
                 list_.pop_back();
             }
         }else{
@@ -42,6 +56,8 @@ public:
     }
 
     bool get(int64_t id, T &data){
+        std::cout << "get: " << id <<  ": ";
+        show();
         auto ts = now();
         expire(ts);
         auto iter = m_.find(id);
@@ -64,10 +80,9 @@ private:
     }
     int64_t ttl_;
     int64_t capacity_;
-    std::list<Item> list_;
-    std::unordered_map<int64_t, typename std::list<Item>::iterator > m_;
+    DLinkList<Item> list_;
+    std::unordered_map<int64_t, typename DLinkList<Item>::iterator > m_;
 };
-
 int main(){
 
     LruCache<int> cache(10, 100000);
